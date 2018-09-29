@@ -1,0 +1,17 @@
+{
+  "observers":
+  [
+    {
+      "id"  : 1,
+      "name": "localhost"
+    }
+  ],
+  "targets":
+  [
+    {
+      "id"     : 1,
+      "name"   : "114DNS",
+      "address": "114.114.114.114"
+    }
+  ]
+}

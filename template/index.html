@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1"/>
+    <meta name="theme-color" content="#C8C8C8"/>
+    <title>Sword</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+    <div class="container container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#header">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="./">Sword</a>
+        </div>
+        <div class="collapse navbar-collapse" id="header">
+            <ul class="nav navbar-nav">
+                <li><a href="./">首页</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+{{range .}}
+    <div class="row col-md-12">
+        <div id="abbr-chart-{{.Id}}" style="height: 300px;"></div>
+    </div>
+{{end}}
+</div>
+<footer class="footer">
+    <div class="container">
+        <p class="text-center">©2018 Powered by Sword</p>
+    </div>
+</footer>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcss.com/echarts/4.1.0/echarts.min.js"></script>
+<script>
+    function formatTimestamp(timestamp) {
+        let date = new Date(timestamp * 1000);
+        let year = date.getFullYear();
+        let month = ("0" + date.getMonth()).substr(-2);
+        let day = ("0" + date.getDay()).substr(-2);
+        let hour = ("0" + date.getHours()).substr(-2);
+        let minute = ("0" + date.getMinutes()).substr(-2);
+        return year + "-" + month + "-" + day + " " + hour + ":" + minute;
+    }
+    function paintAbbr(element, title, dataSets) {
+        let chart = echarts.init(document.getElementById(element));
+        let option = {
+            title: {
+                text: title
+            },
+            tooltip: {
+                trigger: "axis",
+                axisPointer: {
+                    type: "cross",
+                    animation: false,
+                    label: {
+                        backgroundColor: "#ccc",
+                        borderColor: "#aaa",
+                        borderWidth: 1,
+                        shadowBlur: 0,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        textStyle: {
+                            color: "#222"
+                        }
+                    }
+                },
+                formatter: function (params) {
+                    return params.map(param =>
+                            param.seriesName + ": " + (param.value == null ? -1 : param.value) + "ms").join("<br>")
+                }
+            },
+            legend: {
+                top: "bottom",
+                data: dataSets.map(dataSet => dataSet.observer.name)
+            },
+            xAxis: {
+                data: dataSets[0].data.map(data => formatTimestamp(data.time))
+            },
+            yAxis: {
+                name: "延迟/ms"
+            },
+            series: dataSets.map(function (dataSet) {
+                return {
+                    name: dataSet.observer.name,
+                    type: "line",
+                    data: dataSet.data.map(data => data.value < 0 ? null : data.value),
+                    showSymbol: false,
+                    showAllSymbol: true,
+                    sampling: "average",
+                }
+            })
+        };
+        chart.setOption(option);
+        let pre = window.onresize;
+        if (typeof pre !== "function") {
+            window.onresize = function () {
+                chart.resize();
+            };
+        } else {
+            window.onresize = function () {
+                chart.resize();
+                pre();
+            };
+        }
+    }
+    {{range .}}
+    $.get("./api/data/abbr?t={{.Id}}", function (data) {
+        paintAbbr("abbr-chart-{{.Id}}", "{{.Name}}", data)
+    });
+    {{end}}
+</script>
+</body>
+</html>
