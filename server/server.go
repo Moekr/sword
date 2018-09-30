@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var (
@@ -28,6 +29,7 @@ func Start(serverArgs *util.Args) error {
 		dataSets[target.Id] = make(map[int64]*DataSet, len(conf.Observers))
 	}
 	loadData()
+	go refreshLoop()
 	go deferKill()
 	defer saveData()
 	http.HandleFunc("/api/conf", httpConf)
@@ -46,9 +48,24 @@ func loadConf() error {
 	}
 }
 
+func refreshLoop() {
+	for {
+		now := time.Now()
+		cur := time.Unix(0, now.UnixNano()-now.UnixNano()%int64(time.Minute))
+		next := cur.Add(time.Minute + 30 * time.Second)
+		time.Sleep(next.Sub(now))
+		for _, dataSets := range dataSets {
+			for _, dataSet := range dataSets {
+				dataSet.Refresh(next)
+			}
+		}
+		saveData()
+	}
+}
+
 func deferKill() {
 	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGHUP)
 	log.Printf("receive signal %v\n", <-ch)
 	saveData()
 	os.Exit(0)

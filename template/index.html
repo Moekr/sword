@@ -83,7 +83,7 @@
                 data: dataSets.map(dataSet => dataSet.observer.name)
             },
             xAxis: {
-                data: dataSets[0].data.map(data => formatTimestamp(data.time))
+                data: dataSets[0].data.map(data => formatTimestamp(data[0]))
             },
             yAxis: {
                 name: "延迟/ms"
@@ -92,7 +92,7 @@
                 return {
                     name: dataSet.observer.name,
                     type: "line",
-                    data: dataSet.data.map(data => data.value < 0 ? null : data.value),
+                    data: dataSet.data.map(data => data[1] < 0 ? null : data[1]),
                     showSymbol: false,
                     showAllSymbol: true,
                     sampling: "average",

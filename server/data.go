@@ -22,18 +22,16 @@ type DataSet struct {
 	WeekData  [][]int64        `json:"week_data"`
 	MonthData [][]int64        `json:"month_data"`
 	YearData  [][]int64        `json:"year_data"`
+	Buffer    *common.Record   `json:"buffer"`
 	Lock      *sync.RWMutex    `json:"-"`
 }
 
 type AbbrDataSet struct {
 	Observer *common.Observer `json:"observer"`
-	Data     []*AbbrData      `json:"data"`
+	Data     [][]int64        `json:"data"`
 }
 
-type AbbrData struct {
-	Time  int64 `json:"time"`
-	Value int64 `json:"value"`
-}
+var initNow = time.Now()
 
 func NewEmptyDataSet(t *common.Target, o *common.Observer) *DataSet {
 	dataSet := &DataSet{
@@ -54,78 +52,67 @@ func (d *DataSet) Init() {
 }
 
 func (d *DataSet) initDayData() {
-	now := time.Now()
-	cur := time.Unix(0, now.UnixNano()-now.UnixNano()%int64(time.Minute))
+	cur := time.Unix(0, initNow.UnixNano()-initNow.UnixNano()%int64(time.Minute))
 	fst := cur.Add(-1440 * time.Minute)
 	oldData := make([][]int64, 0)
 	for idx, data := range d.DayData {
 		if data[timeIdx] == fst.Unix() {
 			oldData = d.DayData[idx:]
+			break
 		}
 	}
-	newData := make([][]int64, len(oldData), 1440)
-	for idx, data := range oldData {
-		newData[idx] = data
+	idx := 0
+	newData := make([][]int64, 0, 1440)
+	for i := 0; i < 1440; i++ {
+		if idx >= len(oldData) {
+			break
+		}
+		data := oldData[idx]
+		ts := fst.Unix() + int64(i) * 60
+		if data[timeIdx] > ts {
+			newData = append(newData, []int64{fst.Add(time.Duration(i) * time.Minute).Unix(), -1, -1, -1, -1})
+		} else {
+			if data[timeIdx] < ts {
+				i--
+			} else {
+				newData = append(newData, data)
+			}
+			idx++
+		}
 	}
 	for i := len(newData); i < 1440; i++ {
 		newData = append(newData, []int64{fst.Add(time.Duration(i) * time.Minute).Unix(), -1, -1, -1, -1})
 	}
 	d.DayData = newData
-	go checkDayDataLoop(d)
-}
-
-func checkDayDataLoop(dataSet *DataSet) {
-	for {
-		checkDayData(dataSet)
-	}
-}
-
-func checkDayData(dataSet *DataSet) {
-	now := time.Now()
-	cur := time.Unix(0, now.UnixNano()-now.UnixNano()%int64(time.Minute))
-	next := time.Unix(0, (now.UnixNano()/int64(time.Minute)+1)*int64(time.Minute))
-	time.Sleep(next.Sub(now))
-	dataSet.Lock.Lock()
-	defer dataSet.Lock.Unlock()
-	offset := (cur.Unix() - dataSet.DayData[1439][timeIdx]) / 60
-	for offset > 0 {
-		dataSet.put(&common.Record{
-			Time: next.Unix() - offset*60,
-			Avg:  -1,
-			Max:  -1,
-			Min:  -1,
-			Lost: -1,
-		}, true)
-		offset--
-	}
 }
 
 func (d *DataSet) Put(record *common.Record) {
 	d.Lock.Lock()
 	defer d.Lock.Unlock()
-	d.put(record, false)
+	d.Buffer = record
 }
 
-func (d *DataSet) put(record *common.Record, noCheck bool) {
-	now := time.Now()
+func (d *DataSet) Refresh(now time.Time) {
+	d.Lock.Lock()
+	defer d.Lock.Unlock()
 	cur := time.Unix(0, now.UnixNano()-now.UnixNano()%int64(time.Minute))
-	if noCheck || cur.Unix() > d.DayData[1439][timeIdx] {
-		for i := 0; i < 1439; i++ {
-			d.DayData[i] = d.DayData[i+1]
-		}
-		d.DayData[1439] = []int64{cur.Unix(), record.Avg, record.Max, record.Min, record.Lost}
+	for i := 0; i < 1439; i++ {
+		d.DayData[i] = d.DayData[i+1]
 	}
+	if d.Buffer != nil {
+		d.DayData[1439] = []int64{cur.Unix(), d.Buffer.Avg, d.Buffer.Max, d.Buffer.Min, d.Buffer.Lost}
+	} else {
+		d.DayData[1439] = []int64{cur.Unix(), -1, -1, -1, -1}
+	}
+	d.Buffer = nil
 }
 
 func (d *DataSet) GetAbbrData() *AbbrDataSet {
 	d.Lock.RLock()
 	defer d.Lock.RUnlock()
-	data := make([]*AbbrData, len(d.DayData))
+	data := make([][]int64, len(d.DayData))
 	for idx, record := range d.DayData {
-		data[idx] = &AbbrData{
-			Time:  record[timeIdx],
-			Value: record[avgIdx],
-		}
+		data[idx] = []int64{record[timeIdx], record[avgIdx]}
 	}
 	return &AbbrDataSet{
 		Observer: d.Observer,

@@ -6,6 +6,7 @@ import (
 	"github.com/Moekr/sword/common"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strconv"
 )
 
@@ -79,6 +80,9 @@ func httpAbbrData(w http.ResponseWriter, r *http.Request) {
 	for _, dataSet := range data {
 		result = append(result, dataSet.GetAbbrData())
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Observer.Id < result[j].Observer.Id
+	})
 	if bs, err := json.Marshal(result); err != nil {
 		http.Error(w, "marshal result error: "+err.Error(), http.StatusInternalServerError)
 	} else {
