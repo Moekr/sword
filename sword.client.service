@@ -1,0 +1,13 @@
+[Unit]
+Description=Sword client daemon
+After=network.target
+
+[Service]
+ExecStart=/opt/sword/sword -u http://localhost:7901 -i 1 -t token
+ExecReload=/bin/kill $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=multi-user.target

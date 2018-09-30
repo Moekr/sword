@@ -1,0 +1,13 @@
+[Unit]
+Description=Sword server daemon
+After=network.target
+
+[Service]
+ExecStart=/opt/sword/sword -s -b 127.0.0.1:7901 -c /opt/sword/conf.json -d /opt/sword/data/ -t token
+ExecReload=/bin/kill $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=multi-user.target
