@@ -47,9 +47,8 @@ func httpData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unmarshal port data error: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	if v := dataSets[targetId]; v != nil {
-		dataSet := v[observerId]
-		if dataSet != nil {
+	if dataSets := dataSets[targetId]; dataSets != nil {
+		if dataSet := dataSets[observerId]; dataSet != nil {
 			dataSet.Put(record)
 			return
 		}
@@ -66,10 +65,6 @@ func checkToken(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func httpAbbrData(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "parse form error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
 	targetId, err := parseIntParam(r, "t", false, -1)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -92,7 +87,26 @@ func httpAbbrData(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpFullData(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "", http.StatusNotFound)
+	var targetId, observerId int64
+	targetId, err := parseIntParam(r, "t", false, -1)
+	observerId, err = parseIntParam(r, "o", false, -1)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if dataSets := dataSets[targetId]; dataSets != nil {
+		if dataSet := dataSets[observerId]; dataSet != nil {
+			data := dataSet.GetFullData()
+			if bs, err := json.Marshal(data); err != nil {
+				http.Error(w, "marshal result error: "+err.Error(), http.StatusInternalServerError)
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(bs)
+			}
+			return
+		}
+	}
+	http.Error(w, "no such target id or observer id", http.StatusBadRequest)
 }
 
 var errMissingParam = fmt.Errorf("missing required param")

@@ -31,6 +31,11 @@ type AbbrDataSet struct {
 	Data     [][]int64        `json:"data"`
 }
 
+type FullDataSet struct {
+	Observer *common.Observer `json:"observer"`
+	Data     [][]int64        `json:"data"`
+}
+
 var initNow = time.Now()
 
 func NewEmptyDataSet(t *common.Target, o *common.Observer) *DataSet {
@@ -115,6 +120,19 @@ func (d *DataSet) GetAbbrData() *AbbrDataSet {
 		data[idx] = []int64{record[timeIdx], record[avgIdx]}
 	}
 	return &AbbrDataSet{
+		Observer: d.Observer,
+		Data:     data,
+	}
+}
+
+func (d *DataSet) GetFullData() *FullDataSet {
+	d.Lock.RLock()
+	defer d.Lock.RUnlock()
+	data := make([][]int64, len(d.DayData))
+	for idx, record := range d.DayData {
+		data[idx] = record
+	}
+	return &FullDataSet{
 		Observer: d.Observer,
 		Data:     data,
 	}

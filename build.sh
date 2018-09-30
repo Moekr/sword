@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 
-go build -a -v -ldflags "-X 'github.com/Moekr/sword/server.IndexTemplate=$(cat template/index.html)'" -o output/sword
+go build -ldflags "-X 'github.com/Moekr/sword/server.HeaderTemplate=$(cat template/header.html)' \
+-X 'github.com/Moekr/sword/server.FooterTemplate=$(cat template/footer.html)' \
+-X 'github.com/Moekr/sword/server.IndexTemplate=$(cat template/index.html)' \
+-X 'github.com/Moekr/sword/server.DetailTemplate=$(cat template/detail.html)'" \
+    -a -v -o output/sword
