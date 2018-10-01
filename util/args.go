@@ -12,7 +12,8 @@ type Args struct {
 	Server   string // -u
 	ClientId int64  // -i
 	// for both
-	Token string // -t
+	Token   string // -t
+	IsDebug bool   // -v
 }
 
 func ParseArgs() *Args {
@@ -24,6 +25,7 @@ func ParseArgs() *Args {
 	flag.StringVar(&args.Server, "u", "http://localhost:7901", "server address")
 	flag.Int64Var(&args.ClientId, "i", -1, "client id")
 	flag.StringVar(&args.Token, "t", "", "token used in communication between server and client")
+	flag.BoolVar(&args.IsDebug, "v", false, "identify debug mode or not")
 	flag.Parse()
 	return args
 }

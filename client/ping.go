@@ -2,8 +2,9 @@ package client
 
 import (
 	"github.com/Moekr/sword/common"
-	"log"
+	"github.com/Moekr/sword/util"
 	"math"
+	"math/rand"
 	"net"
 	"os"
 	"time"
@@ -22,40 +23,38 @@ func doPing(address string) *common.Record {
 
 	conn, err := net.Dial("ip4:icmp", address)
 	if err != nil {
-		log.Println(err.Error())
+		util.Debugf("dial %s error: %s\n", address, err.Error())
 		return record
 	}
 	defer conn.Close()
 
-	pid := os.Getpid()
-	req := make([]byte, 64)
-	req[0] = 8
-	req[4] = byte(pid >> 8)
-	req[5] = byte(pid & 0xff)
-	rsp := make([]byte, 1024)
 	var totalLatency, maxLatency, minLatency, lostPacket int64
 	minLatency = math.MaxInt64
-	for i := 0; i < 20; i++ {
-		req[2] = 0
-		req[3] = 0
-		req[7] = byte(i)
-		cs := checkSum(req)
-		req[2] = byte(cs >> 8)
-		req[3] = byte(cs & 0xff)
+	var sequence uint16
+	buffer := make([]byte, 1024)
+	for sequence = 0; sequence < 20; sequence++ {
+		req := newRequest(sequence)
 		if _, err := conn.Write(req); err != nil {
-			log.Println(err.Error())
-			return record
+			util.Debugf("write request to %s error: %s\n", address, err.Error())
+			lostPacket++
+			continue
 		}
 		start := time.Now()
-		conn.SetReadDeadline(start.Add(5 * time.Second))
-		_, err := conn.Read(rsp)
+		conn.SetReadDeadline(start.Add(2 * time.Second))
+		length, err := conn.Read(buffer)
 		if err != nil {
-			log.Println(err.Error())
+			util.Debugf("read response from %s error: %s\n", address, err.Error())
+			lostPacket++
+			continue
+		} else if length != 20+64 || !validateResponse(req, buffer[20:84]) {
+			util.Debugf("response from %s invalid\n", address)
 			lostPacket++
 			continue
 		}
 		end := time.Now()
+
 		latency := end.Sub(start).Nanoseconds() / int64(time.Millisecond)
+		util.Debugf("response from %s latency %dms\n", address, latency)
 		totalLatency = totalLatency + latency
 		if latency > maxLatency {
 			maxLatency = latency
@@ -63,7 +62,7 @@ func doPing(address string) *common.Record {
 		if latency < minLatency {
 			minLatency = latency
 		}
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 	}
 	if lostPacket < 20 {
 		record.Avg = totalLatency / (20 - lostPacket)
@@ -72,6 +71,38 @@ func doPing(address string) *common.Record {
 	}
 	record.Lost = lostPacket * 5
 	return record
+}
+
+func newRequest(sequence uint16) []byte {
+	req := make([]byte, 64)
+	req[0] = 8
+	pid := os.Getpid()
+	req[4] = byte(pid >> 8)
+	req[5] = byte(pid & 0xff)
+	req[6] = byte(sequence >> 8)
+	req[7] = byte(sequence & 0xff)
+	for i := 8; i < 64; i++ {
+		req[i] = byte(rand.Int() & 0xff)
+	}
+	cs := checkSum(req)
+	req[2] = byte(cs >> 8)
+	req[3] = byte(cs & 0xff)
+	return req
+}
+
+func validateResponse(req, rsp []byte) bool {
+	if rsp[0] != 0 || rsp[1] != 0 {
+		return false
+	}
+	for i := 4; i < 64; i++ {
+		if req[i] != rsp[i] {
+			return false
+		}
+	}
+	cs := (uint16(rsp[2]) << 8) + uint16(rsp[3])
+	rsp[2] = 0
+	rsp[3] = 0
+	return checkSum(rsp) == cs
 }
 
 func checkSum(data []byte) uint16 {

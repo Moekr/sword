@@ -5,7 +5,6 @@ import (
 	"github.com/Moekr/sword/common"
 	"github.com/Moekr/sword/util"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -54,7 +53,7 @@ func refreshLoop() {
 	for {
 		now := time.Now()
 		cur := time.Unix(0, now.UnixNano()-now.UnixNano()%int64(time.Minute))
-		next := cur.Add(time.Minute + 30 * time.Second)
+		next := cur.Add(time.Minute + 30*time.Second)
 		time.Sleep(next.Sub(now))
 		for _, dataSets := range dataSets {
 			for _, dataSet := range dataSets {
@@ -68,7 +67,7 @@ func refreshLoop() {
 func deferKill() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGHUP)
-	log.Printf("receive signal %v\n", <-ch)
+	util.Infof("receive signal %v\n", <-ch)
 	saveData()
 	os.Exit(0)
 }

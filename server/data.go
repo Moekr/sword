@@ -73,7 +73,7 @@ func (d *DataSet) initDayData() {
 			break
 		}
 		data := oldData[idx]
-		ts := fst.Unix() + int64(i) * 60
+		ts := fst.Unix() + int64(i)*60
 		if data[timeIdx] > ts {
 			newData = append(newData, []int64{fst.Add(time.Duration(i) * time.Minute).Unix(), -1, -1, -1, -1})
 		} else {

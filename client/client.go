@@ -7,7 +7,6 @@ import (
 	"github.com/Moekr/sword/common"
 	"github.com/Moekr/sword/util"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 )
@@ -32,7 +31,7 @@ func pingLoop() {
 func ping() (err error) {
 	defer func() {
 		if err != nil {
-			log.Println("ping error: " + err.Error())
+			util.Debugf("ping error: %s\n", err.Error())
 		}
 	}()
 	req, err := http.NewRequest(http.MethodGet, args.Server+"/api/conf", nil)
@@ -64,7 +63,7 @@ func ping() (err error) {
 func pingTarget(target *common.Target) (err error) {
 	defer func() {
 		if err != nil {
-			log.Println("ping target error: " + err.Error())
+			util.Debugf("ping target error: %s\n", err.Error())
 		}
 	}()
 	record := doPing(target.Address)

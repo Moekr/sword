@@ -9,6 +9,7 @@ import (
 
 func main() {
 	args := util.ParseArgs()
+	util.SetDebug(args.IsDebug)
 	var err error
 	if args.IsServer {
 		err = server.Start(args)

@@ -3,14 +3,14 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Moekr/sword/util"
 	"io/ioutil"
-	"log"
 	"path"
 )
 
 func loadData() {
 	d := args.DataDir
-	log.Println("load data from " + d)
+	util.Infof("load data from %s\n", d)
 	for _, target := range conf.Targets {
 		for _, observer := range conf.Observers {
 			f := fmt.Sprintf("sword-%d-%d.json", target.Id, observer.Id)
@@ -22,7 +22,11 @@ func loadData() {
 					dataSet.Init()
 					dataSets[target.Id][observer.Id] = dataSet
 					continue
+				} else {
+					util.Infof("unmarshal data file %s error: %s\n", f, err.Error())
 				}
+			} else {
+				util.Infof("read data file %s error: %s\n", f, err.Error())
 			}
 			dataSets[target.Id][observer.Id] = NewEmptyDataSet(target, observer)
 		}
@@ -31,12 +35,16 @@ func loadData() {
 
 func saveData() {
 	d := args.DataDir
-	log.Println("save data to " + d)
+	util.Infof("save data to %s\n", d)
 	for _, target := range conf.Targets {
 		for _, observer := range conf.Observers {
 			f := fmt.Sprintf("sword-%d-%d.json", target.Id, observer.Id)
 			if bs, err := json.Marshal(dataSets[target.Id][observer.Id]); err == nil {
-				ioutil.WriteFile(path.Join(d, f), bs, 0755)
+				if err = ioutil.WriteFile(path.Join(d, f), bs, 0755); err != nil {
+					util.Infof("write data file %s error: %s\n", f, err.Error())
+				}
+			} else {
+				util.Infof("marshal data file %s error: %s\n", f, err.Error())
 			}
 		}
 	}
