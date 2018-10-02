@@ -30,9 +30,12 @@ func httpData(w http.ResponseWriter, r *http.Request) {
 	if !checkToken(w, r) {
 		return
 	}
-	var targetId, observerId int64
 	targetId, err := parseIntParam(r, "t", false, -1)
-	observerId, err = parseIntParam(r, "o", false, -1)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	observerId, err := parseIntParam(r, "o", false, -1)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -70,10 +73,14 @@ func httpAbbrData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	timeRange, err := parseIntParam(r, "r", true, 1)
+	if err != nil {
+		timeRange = rangeDay
+	}
 	data := dataSets[targetId]
 	result := make([]*AbbrDataSet, 0, len(data))
 	for _, dataSet := range data {
-		result = append(result, dataSet.GetAbbrData())
+		result = append(result, dataSet.GetAbbrData(timeRange))
 	}
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Observer.Id < result[j].Observer.Id
@@ -87,16 +94,23 @@ func httpAbbrData(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpFullData(w http.ResponseWriter, r *http.Request) {
-	var targetId, observerId int64
 	targetId, err := parseIntParam(r, "t", false, -1)
-	observerId, err = parseIntParam(r, "o", false, -1)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	observerId, err := parseIntParam(r, "o", false, -1)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	timeRange, err := parseIntParam(r, "r", true, 1)
+	if err != nil {
+		timeRange = rangeDay
+	}
 	if dataSets := dataSets[targetId]; dataSets != nil {
 		if dataSet := dataSets[observerId]; dataSet != nil {
-			data := dataSet.GetFullData()
+			data := dataSet.GetFullData(timeRange)
 			if bs, err := json.Marshal(data); err != nil {
 				http.Error(w, "marshal result error: "+err.Error(), http.StatusInternalServerError)
 			} else {

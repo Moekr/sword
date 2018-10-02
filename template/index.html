@@ -1,8 +1,12 @@
 {{define "index"}}
-{{template "header"}}
+<!DOCTYPE html>
+<html>
+{{template "head"}}
+<body>
+{{template "header" .}}
 <div class="container">
     <h4 style="color: gray">注：点击图表标题打开详情页</h4>
-{{range .}}
+{{range .targets}}
     <div class="row col-md-12">
         <div id="abbr-chart-{{.Id}}" style="height: 300px;"></div>
     </div>
@@ -10,12 +14,12 @@
 </div>
 {{template "footer"}}
 <script>
-    function paintAbbr(element, id, name, dataSets) {
+    function paintAbbr(element, id, name, timeRange, dataSets) {
         let chart = echarts.init(document.getElementById(element));
         let option = {
             title: {
                 text: name,
-                link: "./detail.html?t=" + id,
+                link: "./detail.html?t=" + id + "&r=" + timeRange,
             },
             tooltip: {
                 trigger: "axis",
@@ -73,9 +77,9 @@
             };
         }
     }
-    {{range .}}
-    $.get("./api/data/abbr?t={{.Id}}", function (data) {
-        paintAbbr("abbr-chart-{{.Id}}", "{{.Id}}", "{{.Name}}", data)
+    {{range .targets}}
+    $.get("./api/data/abbr?t={{.Id}}&r={{$.timeRange}}", function (data) {
+        paintAbbr("abbr-chart-{{.Id}}", "{{.Id}}", "{{.Name}}", "{{$.timeRange}}", data)
     });
     {{end}}
 </script>

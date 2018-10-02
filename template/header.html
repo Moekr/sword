@@ -1,14 +1,4 @@
 {{define "header"}}
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1"/>
-    <meta name="theme-color" content="#C8C8C8"/>
-    <title>Sword</title>
-    <link rel="stylesheet" type="text/css" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-</head>
-<body>
 <nav class="navbar navbar-default" role="navigation">
     <div class="container container-fluid">
         <div class="navbar-header">
@@ -22,6 +12,17 @@
         <div class="collapse navbar-collapse" id="header">
             <ul class="nav navbar-nav">
                 <li><a href="./">首页</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">时间范围<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="?{{if .target}}t={{.target.Id}}&{{end}}r=1">过去一天 {{if (eq .timeRange 1)}}✅{{end}}</a></li>
+                        <li><a href="?{{if .target}}t={{.target.Id}}&{{end}}r=2">过去一周 {{if (eq .timeRange 2)}}✅{{end}}</a></li>
+                        <li><a href="?{{if .target}}t={{.target.Id}}&{{end}}r=3">过去一月 {{if (eq .timeRange 3)}}✅{{end}}</a></li>
+                        <li><a href="?{{if .target}}t={{.target.Id}}&{{end}}r=4">过去一年 {{if (eq .timeRange 4)}}✅{{end}}</a></li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>

@@ -1,5 +1,9 @@
 {{define "detail"}}
-{{template "header"}}
+<!DOCTYPE html>
+<html>
+{{template "head"}}
+<body>
+{{template "header" .}}
 <div class="container">
     <h2>{{.target.Name}}</h2>
 {{range .observers}}
@@ -141,7 +145,7 @@
         }
     }
     {{range .observers}}
-    $.get("./api/data/full?t={{$.target.Id}}&o={{.Id}}", function (data) {
+    $.get("./api/data/full?t={{$.target.Id}}&o={{.Id}}&r={{$.timeRange}}", function (data) {
         paintFull("detail-chart-{{.Id}}", "{{.Name}}", data)
     });
     {{end}}

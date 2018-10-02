@@ -11,6 +11,7 @@ var (
 )
 
 func init() {
+	htmlTemplate.Parse(HeadTemplate)
 	htmlTemplate.Parse(HeaderTemplate)
 	htmlTemplate.Parse(FooterTemplate)
 	htmlTemplate.Parse(IndexTemplate)
@@ -18,7 +19,15 @@ func init() {
 }
 
 func httpIndex(w http.ResponseWriter, r *http.Request) {
-	htmlTemplate.ExecuteTemplate(w, "index", conf.Targets)
+	timeRange, err := parseIntParam(r, "r", true, 1)
+	if err != nil {
+		timeRange = rangeDay
+	}
+	params := map[string]interface{}{
+		"targets":   conf.Targets,
+		"timeRange": timeRange,
+	}
+	htmlTemplate.ExecuteTemplate(w, "index", params)
 }
 
 func httpDetail(w http.ResponseWriter, r *http.Request) {
@@ -38,5 +47,14 @@ func httpDetail(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "./", http.StatusMovedPermanently)
 		return
 	}
-	htmlTemplate.ExecuteTemplate(w, "detail", map[string]interface{}{"target": target, "observers": conf.Observers})
+	timeRange, err := parseIntParam(r, "r", true, 1)
+	if err != nil {
+		timeRange = rangeDay
+	}
+	params := map[string]interface{}{
+		"target":    target,
+		"observers": conf.Observers,
+		"timeRange": timeRange,
+	}
+	htmlTemplate.ExecuteTemplate(w, "detail", params)
 }

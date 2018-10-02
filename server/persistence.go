@@ -1,11 +1,17 @@
 package server
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"github.com/Moekr/sword/util"
+	"io"
 	"io/ioutil"
+	"os"
 	"path"
+	"path/filepath"
+	"sync"
+	"time"
 )
 
 func loadData() {
@@ -33,9 +39,13 @@ func loadData() {
 	}
 }
 
+var lock = &sync.Mutex{}
+
 func saveData() {
+	lock.Lock()
+	defer lock.Unlock()
 	d := args.DataDir
-	util.Infof("save data to %s\n", d)
+	util.Debugf("save data to %s\n", d)
 	for _, target := range conf.Targets {
 		for _, observer := range conf.Observers {
 			f := fmt.Sprintf("sword-%d-%d.json", target.Id, observer.Id)
@@ -48,4 +58,41 @@ func saveData() {
 			}
 		}
 	}
+}
+
+func backupData(cur time.Time) {
+	d := args.DataDir
+	f := fmt.Sprintf("backup-%d.zip", cur.Unix())
+	zipFile, err := os.Create(path.Join(d, f))
+	if err != nil {
+		util.Infof("create backup file %s error: %s\n", f, err.Error())
+		return
+	}
+	zw := zip.NewWriter(zipFile)
+	defer zw.Close()
+	filepath.Walk(d, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && path != d {
+			return filepath.SkipDir
+		}
+		if filepath.Ext(path) != ".json" {
+			return nil
+		}
+		file, err := os.Open(path)
+		defer file.Close()
+		if err != nil {
+			util.Debugf("open file %s error: %s\n", path, err.Error())
+			return nil
+		}
+		if header, err := zip.FileInfoHeader(info); err != nil {
+			util.Debugf("create zip header %s error%s\n", path, err.Error())
+		} else {
+			header.Name = filepath.Base(header.Name)
+			if w, err := zw.CreateHeader(header); err != nil {
+				util.Debugf("add zip header %s error%s\n", path, err.Error())
+			} else if _, err := io.Copy(w, file); err != nil {
+				util.Debugf("write zip file %s error\n", path, err.Error())
+			}
+		}
+		return nil
+	})
 }

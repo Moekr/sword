@@ -53,14 +53,17 @@ func refreshLoop() {
 	for {
 		now := time.Now()
 		cur := time.Unix(0, now.UnixNano()-now.UnixNano()%int64(time.Minute))
-		next := cur.Add(time.Minute + 30*time.Second)
+		next := cur.Add(time.Minute)
 		time.Sleep(next.Sub(now))
 		for _, dataSets := range dataSets {
 			for _, dataSet := range dataSets {
-				dataSet.Refresh(next)
+				dataSet.Refresh(cur)
 			}
 		}
 		saveData()
+		if next.Minute() == 0 {
+			backupData(next)
+		}
 	}
 }
 
