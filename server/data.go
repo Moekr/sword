@@ -75,41 +75,25 @@ func (d *DataSet) Init() {
 }
 
 func initData(origin [][]int64, interval time.Duration, count int) [][]int64 {
+	om := make(map[int64][]int64, len(origin))
+	for _, data := range origin {
+		om[data[timeIdx]] = data
+	}
 	cur := time.Unix(0, initNow.UnixNano()-initNow.UnixNano()%int64(interval))
 	fst := cur.Add(-time.Duration(count) * interval)
 	if interval > dayInterval {
 		fst = fst.Add(interval)
 	}
-	oldData := make([][]int64, 0)
-	for idx, data := range origin {
-		if data[timeIdx] == fst.Unix() {
-			oldData = origin[idx:]
-			break
-		}
-	}
-	idx := 0
-	newData := make([][]int64, 0, count)
+	result := make([][]int64, 0, count)
 	for i := 0; i < count; i++ {
-		if idx >= len(oldData) {
-			break
-		}
-		data := oldData[idx]
-		ts := fst.Unix() + int64(i)*int64(interval.Seconds())
-		if data[timeIdx] > ts {
-			newData = append(newData, []int64{fst.Add(time.Duration(i) * interval).Unix(), -1, -1, -1, -1})
+		ts := fst.Add(time.Duration(i) * interval).Unix()
+		if data, ok := om[ts]; ok {
+			result = append(result, data)
 		} else {
-			if data[timeIdx] < ts {
-				i--
-			} else {
-				newData = append(newData, data)
-			}
-			idx++
+			result = append(result, []int64{ts, -1, -1, -1, -1})
 		}
 	}
-	for i := len(newData); i < count; i++ {
-		newData = append(newData, []int64{fst.Add(time.Duration(i) * interval).Unix(), -1, -1, -1, -1})
-	}
-	return newData
+	return result
 }
 
 func (d *DataSet) Put(record *common.Record) {
