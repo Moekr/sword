@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/Moekr/sword/common"
 	"github.com/Moekr/sword/util"
 	"io/ioutil"
 	"net/http"
@@ -14,7 +13,7 @@ import (
 
 var (
 	args     *util.Args
-	conf     *common.Conf
+	conf     *Conf
 	dataSets map[int64]map[int64]*DataSet
 )
 

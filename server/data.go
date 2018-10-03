@@ -31,29 +31,29 @@ const (
 )
 
 type DataSet struct {
-	Target    *common.Target   `json:"target"`
-	Observer  *common.Observer `json:"observer"`
-	DayData   [][]int64        `json:"day_data"`
-	WeekData  [][]int64        `json:"week_data"`
-	MonthData [][]int64        `json:"month_data"`
-	YearData  [][]int64        `json:"year_data"`
-	Buffer    *common.Record   `json:"buffer"`
-	Lock      *sync.RWMutex    `json:"-"`
+	Target    *common.Target `json:"-"`
+	Observer  *Observer      `json:"-"`
+	DayData   [][]int64      `json:"day_data"`
+	WeekData  [][]int64      `json:"week_data"`
+	MonthData [][]int64      `json:"month_data"`
+	YearData  [][]int64      `json:"year_data"`
+	Buffer    *common.Record `json:"buffer"`
+	Lock      *sync.RWMutex  `json:"-"`
 }
 
 type AbbrDataSet struct {
-	Observer *common.Observer `json:"observer"`
-	Data     [][]int64        `json:"data"`
+	Observer *Observer `json:"observer"`
+	Data     [][]int64 `json:"data"`
 }
 
 type FullDataSet struct {
-	Observer *common.Observer `json:"observer"`
-	Data     [][]int64        `json:"data"`
+	Observer *Observer `json:"observer"`
+	Data     [][]int64 `json:"data"`
 }
 
 var initNow = time.Now()
 
-func NewEmptyDataSet(t *common.Target, o *common.Observer) *DataSet {
+func NewEmptyDataSet(t *common.Target, o *Observer) *DataSet {
 	dataSet := &DataSet{
 		Target:    t,
 		Observer:  o,

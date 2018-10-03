@@ -5,7 +5,8 @@
 <body>
 {{template "header" .}}
 <div class="container">
-    <h4 style="color: gray">注：点击图表标题打开详情页</h4>
+    <h2>{{.category.Name}}</h2>
+    <h5 style="color: gray">注：点击图表标题打开详情页</h5>
 {{range .targets}}
     <div class="row col-md-12">
         <div id="abbr-chart-{{.Id}}" style="height: 300px;"></div>

@@ -5,19 +5,10 @@ const (
 )
 
 type Target struct {
-	Id      int64  `json:"id"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
-}
-
-type Observer struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-type Conf struct {
-	Targets   []*Target   `json:"targets"`
-	Observers []*Observer `json:"observers"`
+	Id      int64   `json:"id"`
+	Name    string  `json:"name"`
+	Address string  `json:"address"`
+	Cid     []int64 `json:"cid"`
 }
 
 type Record struct {
