@@ -7,15 +7,5 @@
 <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="https://cdn.bootcss.com/echarts/4.1.0/echarts.min.js"></script>
-<script>
-    function formatTimestamp(timestamp) {
-        let date = new Date(timestamp * 1000);
-        let year = date.getFullYear();
-        let month = ("0" + (date.getMonth() + 1)).substr(-2);
-        let day = ("0" + date.getDate()).substr(-2);
-        let hour = ("0" + date.getHours()).substr(-2);
-        let minute = ("0" + date.getMinutes()).substr(-2);
-        return year + "-" + month + "-" + day + " " + hour + ":" + minute;
-    }
-</script>
+<script src="/static/index.js"></script>
 {{end}}

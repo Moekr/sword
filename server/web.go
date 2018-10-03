@@ -37,6 +37,11 @@ func init() {
 }
 
 func httpIndex(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	if path != "/" && path != "/index.html" {
+		http.Redirect(w, r, "/index.html", http.StatusMovedPermanently)
+		return
+	}
 	cid, err := parseIntParam(r, "c", true, conf.DefaultCid)
 	if err != nil {
 		cid = conf.DefaultCid
@@ -47,7 +52,7 @@ func httpIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	category := conf.GetCategory(cid)
 	if category == nil {
-		http.Redirect(w, r, "./", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/index.html", http.StatusMovedPermanently)
 		return
 	}
 	params := map[string]interface{}{
@@ -64,7 +69,7 @@ func httpIndex(w http.ResponseWriter, r *http.Request) {
 func httpDetail(w http.ResponseWriter, r *http.Request) {
 	targetId, err := parseIntParam(r, "t", false, -1)
 	if err != nil {
-		http.Redirect(w, r, "./", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/index.html", http.StatusMovedPermanently)
 		return
 	}
 	var target *common.Target
@@ -75,7 +80,7 @@ func httpDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if target == nil {
-		http.Redirect(w, r, "./", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/index.html", http.StatusMovedPermanently)
 		return
 	}
 	timeRange, err := parseIntParam(r, "r", true, 1)
@@ -91,4 +96,19 @@ func httpDetail(w http.ResponseWriter, r *http.Request) {
 	if err := htmlTemplate.ExecuteTemplate(w, "detail", params); err != nil {
 		util.Infof("parse detail template error: %s\n", err.Error())
 	}
+}
+
+func httpCSS(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/css")
+	w.Write([]byte(IndexCSS))
+}
+
+func httpJS(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/javascript")
+	w.Write([]byte(IndexJS))
+}
+
+func httpFavicon(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "image/x-icon")
+	w.Write(FaviconData)
 }

@@ -34,9 +34,12 @@ func Start(serverArgs *util.Args) error {
 	http.HandleFunc("/api/data", httpData)
 	http.HandleFunc("/api/data/abbr", httpAbbrData)
 	http.HandleFunc("/api/data/full", httpFullData)
-	http.HandleFunc("/", httpIndex)
 	http.HandleFunc("/index.html", httpIndex)
 	http.HandleFunc("/detail.html", httpDetail)
+	http.HandleFunc("/static/index.css", httpCSS)
+	http.HandleFunc("/static/index.js", httpJS)
+	http.HandleFunc("/favicon.ico", httpFavicon)
+	http.HandleFunc("/", httpIndex)
 	return http.ListenAndServe(args.Bind, nil)
 }
 
