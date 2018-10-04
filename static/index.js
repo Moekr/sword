@@ -13,7 +13,8 @@ function paintAbbr(element, id, name, timeRange, dataSets) {
     let option = {
         title: {
             text: name,
-            link: "./detail.html?t=" + id + "&r=" + timeRange,
+            link: "/detail.html?t=" + id + "&r=" + timeRange,
+            target: "self",
         },
         tooltip: {
             trigger: "axis",
