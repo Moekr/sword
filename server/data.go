@@ -137,24 +137,31 @@ func (d *DataSet) Refresh(cur time.Time) {
 func average(data [][]int64) []int64 {
 	result := make([]int64, length)
 	result[timeIdx] = data[len(data)-1][timeIdx]
-	var avg, max, min, lost, cnt int64 = -1, -1, -1, -1, 0
+	var avg, max, min, lost, cnt, empty int64
 	for _, d := range data {
-		if d[avgIdx] == -1 || d[maxIdx] == -1 || d[minIdx] == -1 || d[lostIdx] == -1 {
+		if d[lostIdx] == -1 {
+			empty++
 			continue
 		}
-		avg = avg + d[avgIdx]
-		max = max + d[maxIdx]
-		min = min + d[minIdx]
 		lost = lost + d[lostIdx]
-		cnt++
+		if d[avgIdx] != -1 && d[maxIdx] != -1 && d[minIdx] != -1 {
+			avg = avg + d[avgIdx]
+			max = max + d[maxIdx]
+			min = min + d[minIdx]
+			cnt++
+		}
 	}
 	if cnt == 0 {
-		cnt = 1
+		avg, max, min, cnt = -1, -1, -1, 1
 	}
 	result[avgIdx] = avg / cnt
 	result[maxIdx] = max / cnt
 	result[minIdx] = min / cnt
-	result[lostIdx] = lost / cnt
+	if cnt := int64(len(data)) - empty; cnt > 0 {
+		result[lostIdx] = lost / cnt
+	} else {
+		result[lostIdx] = -1
+	}
 	return result
 }
 
