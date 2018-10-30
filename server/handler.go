@@ -123,6 +123,40 @@ func httpFullData(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "no such target id or observer id", http.StatusBadRequest)
 }
 
+func httpStatData(w http.ResponseWriter, r *http.Request) {
+	if !checkToken(w, r) {
+		return
+	}
+	targetId, err := parseIntParam(r, "t", false, -1)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if dataSets := dataSets[targetId]; dataSets != nil {
+		var target *common.Target
+		result := make([]*StatDataSet, 0, len(dataSets))
+		for _, dataSet := range dataSets {
+			target = dataSet.Target
+			result = append(result, dataSet.GetStatData())
+		}
+		sort.Slice(result, func(i, j int) bool {
+			return result[i].Observer.Id < result[j].Observer.Id
+		})
+		data := map[string]interface{}{
+			"target": target,
+			"data"  : result,
+		}
+		if bs, err := json.Marshal(data); err != nil {
+			http.Error(w, "marshal result error: "+err.Error(), http.StatusInternalServerError)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(bs)
+		}
+		return
+	}
+	http.Error(w, "no such target id or observer id", http.StatusBadRequest)
+}
+
 var errMissingParam = fmt.Errorf("missing required param")
 
 func parseIntParam(r *http.Request, key string, nullable bool, defaultValue int64) (int64, error) {

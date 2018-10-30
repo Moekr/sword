@@ -31,6 +31,7 @@ func Start(serverArgs *args.Args) error {
 	http.HandleFunc("/api/data", httpData)
 	http.HandleFunc("/api/data/abbr", httpAbbrData)
 	http.HandleFunc("/api/data/full", httpFullData)
+	http.HandleFunc("/api/data/stat", httpStatData)
 	http.HandleFunc("/index.html", httpIndex)
 	http.HandleFunc("/detail.html", httpDetail)
 	http.HandleFunc("/static/index.css", httpCSS)

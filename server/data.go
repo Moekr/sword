@@ -51,6 +51,14 @@ type FullDataSet struct {
 	Data     [][]int64 `json:"data"`
 }
 
+type StatDataSet struct {
+	Observer *Observer `json:"observer"`
+	Avg      int64     `json:"avg"`
+	Max      int64     `json:"max"`
+	Min      int64     `json:"min"`
+	Lost     int64     `json:"lost"`
+}
+
 var initNow = time.Now()
 
 func NewEmptyDataSet(t *common.Target, o *Observer) *DataSet {
@@ -190,6 +198,21 @@ func (d *DataSet) GetFullData(timeRange int64) *FullDataSet {
 	return &FullDataSet{
 		Observer: d.Observer,
 		Data:     data,
+	}
+}
+
+func (d *DataSet) GetStatData() *StatDataSet {
+	d.Lock.RLock()
+	defer d.Lock.RUnlock()
+	originData := d.GetOriginData(rangeDay)
+	originData = originData[len(originData)-10:]
+	statData := average(originData)
+	return &StatDataSet{
+		Observer: d.Observer,
+		Avg:      statData[avgIdx],
+		Max:      statData[maxIdx],
+		Min:      statData[minIdx],
+		Lost:     statData[lostIdx],
 	}
 }
 

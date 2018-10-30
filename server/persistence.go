@@ -22,7 +22,7 @@ var lock = &sync.Mutex{}
 func loadData() {
 	p := path.Join(_args.DataDir, dataFileName)
 	if err := loadDataImpl(p); err != nil {
-		logs.Error("load data error: %s", p, err.Error())
+		logs.Error("load data error: %s", err.Error())
 		dataSets = nil
 	}
 	dss := make(map[int64]map[int64]*DataSet, len(conf.Targets))
