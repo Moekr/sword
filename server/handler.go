@@ -60,7 +60,7 @@ func httpData(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkToken(w http.ResponseWriter, r *http.Request) bool {
-	if r.Header.Get(common.TokenHeaderName) != args.Token {
+	if r.Header.Get(common.TokenHeaderName) != _args.Token {
 		http.Error(w, "token invalid", http.StatusForbidden)
 		return false
 	}

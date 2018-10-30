@@ -3,18 +3,18 @@ package main
 import (
 	"github.com/Moekr/sword/client"
 	"github.com/Moekr/sword/server"
-	"github.com/Moekr/sword/util"
-	"log"
+	"github.com/Moekr/sword/util/args"
+	"github.com/Moekr/sword/util/logs"
 )
 
 func main() {
-	args := util.ParseArgs()
-	util.SetDebug(args.IsDebug)
+	_args := args.Parse()
+	logs.SetDebug(_args.IsDebug)
 	var err error
-	if args.IsServer {
-		err = server.Start(args)
+	if _args.IsServer {
+		err = server.Start(_args)
 	} else {
-		err = client.Start(args)
+		err = client.Start(_args)
 	}
-	log.Fatalf("exit with error: %s\n", err.Error())
+	logs.Fatal("exit with error: %s", err.Error())
 }

@@ -2,7 +2,8 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/Moekr/sword/util"
+	"github.com/Moekr/sword/util/args"
+	"github.com/Moekr/sword/util/logs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,24 +13,20 @@ import (
 )
 
 var (
-	args     *util.Args
+	_args    *args.Args
 	conf     *Conf
 	dataSets map[int64]map[int64]*DataSet
 )
 
-func Start(serverArgs *util.Args) error {
-	args = serverArgs
+func Start(serverArgs *args.Args) error {
+	_args = serverArgs
 	if err := loadConf(); err != nil {
 		return err
 	}
-	dataSets = make(map[int64]map[int64]*DataSet, len(conf.Targets))
-	for _, target := range conf.Targets {
-		dataSets[target.Id] = make(map[int64]*DataSet, len(conf.Observers))
-	}
 	loadData()
+	defer saveData(false)
 	go refreshLoop()
 	go deferKill()
-	defer saveData()
 	http.HandleFunc("/api/conf", httpConf)
 	http.HandleFunc("/api/data", httpData)
 	http.HandleFunc("/api/data/abbr", httpAbbrData)
@@ -40,11 +37,11 @@ func Start(serverArgs *util.Args) error {
 	http.HandleFunc("/static/index.js", httpJS)
 	http.HandleFunc("/favicon.ico", httpFavicon)
 	http.HandleFunc("/", httpIndex)
-	return http.ListenAndServe(args.Bind, nil)
+	return http.ListenAndServe(_args.Bind, nil)
 }
 
 func loadConf() error {
-	if bs, err := ioutil.ReadFile(args.ConfFile); err != nil {
+	if bs, err := ioutil.ReadFile(_args.ConfFile); err != nil {
 		return err
 	} else {
 		return json.Unmarshal(bs, &conf)
@@ -62,17 +59,18 @@ func refreshLoop() {
 				dataSet.Refresh(cur)
 			}
 		}
-		saveData()
-		if next.Minute() == 0 {
-			backupData(next)
-		}
+		saveData(next.Minute() == 0)
 	}
 }
 
 func deferKill() {
 	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGHUP)
-	util.Infof("receive signal %v\n", <-ch)
-	saveData()
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	sig := <-ch
+	logs.Warn("receive signal %v", sig)
+	saveData(false)
+	if sig == syscall.SIGTERM {
+		os.Exit(1)
+	}
 	os.Exit(0)
 }

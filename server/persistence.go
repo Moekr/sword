@@ -1,102 +1,102 @@
 package server
 
 import (
-	"archive/tar"
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"github.com/Moekr/sword/util"
-	"io"
-	"io/ioutil"
+	"github.com/Moekr/sword/util/logs"
 	"os"
 	"path"
-	"path/filepath"
 	"sync"
 	"time"
 )
 
-func loadData() {
-	d := args.DataDir
-	util.Infof("load data from %s\n", d)
-	for _, target := range conf.Targets {
-		for _, observer := range conf.Observers {
-			f := fmt.Sprintf("sword-%d-%d.json", target.Id, observer.Id)
-			if bs, err := ioutil.ReadFile(path.Join(d, f)); err == nil {
-				dataSet := &DataSet{}
-				if err := json.Unmarshal(bs, dataSet); err == nil {
-					dataSet.Target = target
-					dataSet.Observer = observer
-					dataSet.Init()
-					dataSets[target.Id][observer.Id] = dataSet
-					continue
-				} else {
-					util.Infof("unmarshal data file %s error: %s\n", f, err.Error())
-				}
-			} else {
-				util.Infof("read data file %s error: %s\n", f, err.Error())
-			}
-			dataSets[target.Id][observer.Id] = NewEmptyDataSet(target, observer)
-		}
-	}
-}
+const (
+	tmpFileName  = "sword-%d.json.gz"
+	dataFileName = "sword.json.gz"
+)
 
 var lock = &sync.Mutex{}
 
-func saveData() {
+func loadData() {
+	p := path.Join(_args.DataDir, dataFileName)
+	if err := loadDataImpl(p); err != nil {
+		logs.Error("load data error: %s", p, err.Error())
+		dataSets = nil
+	}
+	dss := make(map[int64]map[int64]*DataSet, len(conf.Targets))
+	for _, target := range conf.Targets {
+		dsm := make(map[int64]*DataSet, len(conf.Observers))
+		for _, observer := range conf.Observers {
+			if ds, ok := dataSets[target.Id][observer.Id]; ok {
+				ds.Target = target
+				ds.Observer = observer
+				ds.Init()
+				dsm[observer.Id] = ds
+			} else {
+				dsm[observer.Id] = NewEmptyDataSet(target, observer)
+			}
+		}
+		dss[target.Id] = dsm
+	}
+	dataSets = dss
+}
+
+func loadDataImpl(p string) error {
+	logs.Info("load data from %s begin", p)
+	file, err := os.Open(p)
+	if err != nil {
+		return fmt.Errorf("open file %s error: %s", p, err.Error())
+	}
+	defer file.Close()
+	reader, err := gzip.NewReader(file)
+	if err != nil {
+		return fmt.Errorf("create gzip reader error: %s", err.Error())
+	}
+	defer reader.Close()
+	decoder := json.NewDecoder(reader)
+	if err := decoder.Decode(&dataSets); err != nil {
+		return fmt.Errorf("decode from file %s error: %s", p, err.Error())
+	}
+	logs.Info("load data from %s success", p)
+	return nil
+}
+
+func saveData(doBackup bool) {
 	lock.Lock()
 	defer lock.Unlock()
-	d := args.DataDir
-	util.Debugf("save data to %s\n", d)
-	for _, target := range conf.Targets {
-		for _, observer := range conf.Observers {
-			f := fmt.Sprintf("sword-%d-%d.json", target.Id, observer.Id)
-			if bs, err := json.Marshal(dataSets[target.Id][observer.Id]); err == nil {
-				if err = ioutil.WriteFile(path.Join(d, f), bs, 0755); err != nil {
-					util.Infof("write data file %s error: %s\n", f, err.Error())
-				}
-			} else {
-				util.Infof("marshal data file %s error: %s\n", f, err.Error())
-			}
+	d := _args.DataDir
+	f := fmt.Sprintf(tmpFileName, time.Now().Unix())
+	p := path.Join(d, f)
+	if err := saveDataImpl(p); err != nil {
+		logs.Error("save data error: %s", err.Error())
+	} else {
+		var fn func(src, dst string) error
+		if doBackup {
+			fn = util.Copy
+		} else {
+			fn = os.Rename
+		}
+		if err = fn(p, path.Join(d, dataFileName)); err != nil {
+			logs.Error("save data error: %s", err.Error())
 		}
 	}
 }
 
-func backupData(cur time.Time) {
-	d := args.DataDir
-	f := fmt.Sprintf("backup-%d.tar.gz", cur.Unix())
-	zipFile, err := os.Create(path.Join(d, f))
+func saveDataImpl(p string) error {
+	logs.Debug("save data to %s begin", p)
+	file, err := os.Create(p)
 	if err != nil {
-		util.Infof("create backup file %s error: %s\n", f, err.Error())
-		return
+		return fmt.Errorf("create file %s error: %s", p, err.Error())
 	}
-	defer zipFile.Close()
-	gw := gzip.NewWriter(zipFile)
-	defer gw.Close()
-	tw := tar.NewWriter(gw)
-	defer tw.Close()
-	filepath.Walk(d, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && path != d {
-			return filepath.SkipDir
-		}
-		if filepath.Ext(path) != ".json" {
-			return nil
-		}
-		file, err := os.Open(path)
-		defer file.Close()
-		if err != nil {
-			util.Debugf("open file %s error: %s\n", path, err.Error())
-			return nil
-		}
-		if header, err := tar.FileInfoHeader(info, ""); err != nil {
-			util.Debugf("create tar header %s error%s\n", path, err.Error())
-		} else {
-			header.Name = filepath.Base(header.Name)
-			if err := tw.WriteHeader(header); err != nil {
-				util.Debugf("add tar header %s error%s\n", path, err.Error())
-			} else if _, err := io.Copy(tw, file); err != nil {
-				util.Debugf("write tar file %s error\n", path, err.Error())
-			}
-		}
-		return nil
-	})
+	defer file.Close()
+	writer := gzip.NewWriter(file)
+	defer writer.Close()
+	encoder := json.NewEncoder(writer)
+	if err := encoder.Encode(dataSets); err != nil {
+		return fmt.Errorf("encode to file %s error: %s", p, err.Error())
+	}
+	logs.Debug("save data to %s success", p)
+	return nil
 }

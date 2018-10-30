@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/Moekr/sword/common"
-	"github.com/Moekr/sword/util"
+	"github.com/Moekr/sword/util/logs"
 	"math"
 	"math/rand"
 	"net"
@@ -23,7 +23,7 @@ func doPing(address string) *common.Record {
 
 	conn, err := net.Dial("ip4:icmp", address)
 	if err != nil {
-		util.Debugf("dial %s error: %s\n", address, err.Error())
+		logs.Debug("dial %s error: %s", address, err.Error())
 		return record
 	}
 	defer conn.Close()
@@ -35,7 +35,7 @@ func doPing(address string) *common.Record {
 	for sequence = 0; sequence < 20; sequence++ {
 		req := newRequest(sequence)
 		if _, err := conn.Write(req); err != nil {
-			util.Debugf("write request to %s error: %s\n", address, err.Error())
+			logs.Debug("write request to %s error: %s", address, err.Error())
 			lostPacket++
 			continue
 		}
@@ -43,18 +43,18 @@ func doPing(address string) *common.Record {
 		conn.SetReadDeadline(start.Add(2 * time.Second))
 		length, err := conn.Read(buffer)
 		if err != nil {
-			util.Debugf("read response from %s error: %s\n", address, err.Error())
+			logs.Debug("read response from %s error: %s", address, err.Error())
 			lostPacket++
 			continue
 		} else if length != 20+64 || !validateResponse(req, buffer[20:84]) {
-			util.Debugf("response from %s invalid\n", address)
+			logs.Debug("response from %s invalid", address)
 			lostPacket++
 			continue
 		}
 		end := time.Now()
 
 		latency := end.Sub(start).Nanoseconds() / int64(time.Millisecond)
-		util.Debugf("response from %s latency %dms\n", address, latency)
+		logs.Debug("response from %s latency %dms", address, latency)
 		totalLatency = totalLatency + latency
 		if latency > maxLatency {
 			maxLatency = latency

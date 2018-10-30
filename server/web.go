@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/Moekr/sword/common"
-	"github.com/Moekr/sword/util"
+	"github.com/Moekr/sword/util/logs"
 	"html/template"
 	"net/http"
 )
@@ -62,7 +62,7 @@ func httpIndex(w http.ResponseWriter, r *http.Request) {
 		"timeRange":  timeRange,
 	}
 	if err := htmlTemplate.ExecuteTemplate(w, "index", params); err != nil {
-		util.Infof("parse index template error: %s\n", err.Error())
+		logs.Error("parse index template error: %s", err.Error())
 	}
 }
 
@@ -94,7 +94,7 @@ func httpDetail(w http.ResponseWriter, r *http.Request) {
 		"timeRange":  timeRange,
 	}
 	if err := htmlTemplate.ExecuteTemplate(w, "detail", params); err != nil {
-		util.Infof("parse detail template error: %s\n", err.Error())
+		logs.Error("parse detail template error: %s", err.Error())
 	}
 }
 

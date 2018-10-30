@@ -5,18 +5,31 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Moekr/sword/common"
-	"github.com/Moekr/sword/util"
+	"github.com/Moekr/sword/util/args"
+	"github.com/Moekr/sword/util/logs"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
-var args *util.Args
+var _args *args.Args
 
-func Start(clientArgs *util.Args) error {
-	args = clientArgs
+func Start(clientArgs *args.Args) error {
+	_args = clientArgs
+	go deferKill()
 	pingLoop()
 	return nil
+}
+
+func deferKill() {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGTERM)
+	logs.Warn("receive signal %v", <-ch)
+	time.Sleep(time.Second)
+	os.Exit(1)
 }
 
 func pingLoop() {
@@ -24,21 +37,18 @@ func pingLoop() {
 		now := time.Now()
 		next := time.Unix(0, (now.UnixNano()/int64(time.Minute)+1)*int64(time.Minute))
 		time.Sleep(next.Sub(now))
-		ping()
+		if err := ping(); err != nil {
+			logs.Debug("ping error: %s", err.Error())
+		}
 	}
 }
 
 func ping() (err error) {
-	defer func() {
-		if err != nil {
-			util.Debugf("ping error: %s\n", err.Error())
-		}
-	}()
-	req, err := http.NewRequest(http.MethodGet, args.Server+"/api/conf", nil)
+	req, err := http.NewRequest(http.MethodGet, _args.Server+"/api/conf", nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Add(common.TokenHeaderName, args.Token)
+	req.Header.Add(common.TokenHeaderName, _args.Token)
 	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -63,7 +73,7 @@ func ping() (err error) {
 func pingTarget(target *common.Target) (err error) {
 	defer func() {
 		if err != nil {
-			util.Debugf("ping target error: %s\n", err.Error())
+			logs.Debug("ping target error: %s", err.Error())
 		}
 	}()
 	record := doPing(target.Address)
@@ -71,12 +81,12 @@ func pingTarget(target *common.Target) (err error) {
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s/api/data?t=%d&o=%d", args.Server, target.Id, args.ClientId)
+	url := fmt.Sprintf("%s/api/data?t=%d&o=%d", _args.Server, target.Id, _args.ClientId)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bs))
 	if err != nil {
 		return err
 	}
-	req.Header.Add(common.TokenHeaderName, args.Token)
+	req.Header.Add(common.TokenHeaderName, _args.Token)
 	req.Header.Add("Content-Type", "application/json")
 	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {

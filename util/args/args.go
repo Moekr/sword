@@ -1,4 +1,4 @@
-package util
+package args
 
 import "flag"
 
@@ -16,7 +16,7 @@ type Args struct {
 	IsDebug bool   // -v
 }
 
-func ParseArgs() *Args {
+func Parse() *Args {
 	args := &Args{}
 	flag.BoolVar(&args.IsServer, "s", false, "identify server role or not")
 	flag.StringVar(&args.Bind, "b", "0.0.0.0:7901", "address and port to bind")
