@@ -201,11 +201,16 @@ func (d *DataSet) GetFullData(timeRange int64) *FullDataSet {
 	}
 }
 
-func (d *DataSet) GetStatData() *StatDataSet {
+func (d *DataSet) GetStatData(interval int) *StatDataSet {
 	d.Lock.RLock()
 	defer d.Lock.RUnlock()
 	originData := d.GetOriginData(rangeDay)
-	originData = originData[len(originData)-10:]
+	if interval > len(originData) {
+		interval = len(originData)
+	} else if interval < 0 {
+		interval = 1
+	}
+	originData = originData[len(originData)-interval:]
 	statData := average(originData)
 	return &StatDataSet{
 		Observer: d.Observer,

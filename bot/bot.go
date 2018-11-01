@@ -57,11 +57,19 @@ func main() {
 }
 
 func doQuery(server, token, query string) string {
+	qs := strings.Split(query, " ")
+	if len(qs) == 1 {
+		qs = append(qs, "")
+	} else if len(qs) == 2 {
+		query = qs[0]
+	} else {
+		return badQueryMessage
+	}
 	id, err := strconv.ParseInt(query, 10, 64)
 	if err != nil {
 		return badQueryMessage
 	}
-	url := fmt.Sprintf("%s/api/data/stat?t=%d", server, id)
+	url := fmt.Sprintf("%s/api/data/stat?t=%d&i=%s", server, id, qs[1])
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return queryErrorMessage

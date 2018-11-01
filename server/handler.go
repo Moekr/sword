@@ -132,12 +132,13 @@ func httpStatData(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	interval, _ := parseIntParam(r, "i", true, 10)
 	if dataSets := dataSets[targetId]; dataSets != nil {
 		var target *common.Target
 		result := make([]*StatDataSet, 0, len(dataSets))
 		for _, dataSet := range dataSets {
 			target = dataSet.Target
-			result = append(result, dataSet.GetStatData())
+			result = append(result, dataSet.GetStatData(int(interval)))
 		}
 		sort.Slice(result, func(i, j int) bool {
 			return result[i].Observer.Id < result[j].Observer.Id
