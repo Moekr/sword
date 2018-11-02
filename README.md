@@ -2,6 +2,8 @@ Sword
 =====
 仿SmokePing的多点ping值监测工具 https://ping.moekr.com
 
+[![Jenkins](https://img.shields.io/jenkins/s/https/ci.moekr.com/job/sword.svg?style=flat-square)](https://ci.moekr.com/job/sword/)
+
 ### 编译安装
 
 1. 确保有Go环境
