@@ -23,6 +23,7 @@ func Start(serverArgs *args.Args) error {
 	if err := loadConf(); err != nil {
 		return err
 	}
+	conf.Init()
 	loadData()
 	defer saveData(false)
 	go refreshLoop()

@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	badQueryMessage = "不能识别的查询"
-	queryErrorMessage = "查询出错"
+	badQueryMessage        = "不能识别的查询"
+	queryErrorMessage      = "查询出错"
 	serverForbiddenMessage = "服务端认证失败"
-	serverErrorMessage = "服务端出错"
-	noSuchTargetMessage = "监测目标不存在"
+	serverErrorMessage     = "服务端出错"
+	noSuchTargetMessage    = "监测目标不存在"
 )
 
 var client = http.DefaultClient
@@ -143,7 +143,7 @@ func padStart(s string, l int, r rune) string {
 		return s
 	}
 	b := strings.Builder{}
-	for i := 0; i < l - len(s); i++ {
+	for i := 0; i < l-len(s); i++ {
 		b.WriteRune(r)
 	}
 	b.WriteString(s)

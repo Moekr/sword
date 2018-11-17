@@ -83,7 +83,7 @@ func httpAbbrData(w http.ResponseWriter, r *http.Request) {
 		result = append(result, dataSet.GetAbbrData(timeRange))
 	}
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Observer.Id < result[j].Observer.Id
+		return result[i].Observer.Name < result[j].Observer.Name
 	})
 	if bs, err := json.Marshal(result); err != nil {
 		http.Error(w, "marshal result error: "+err.Error(), http.StatusInternalServerError)
@@ -141,11 +141,11 @@ func httpStatData(w http.ResponseWriter, r *http.Request) {
 			result = append(result, dataSet.GetStatData(int(interval)))
 		}
 		sort.Slice(result, func(i, j int) bool {
-			return result[i].Observer.Id < result[j].Observer.Id
+			return result[i].Observer.Name < result[j].Observer.Name
 		})
 		data := map[string]interface{}{
 			"target": target,
-			"data"  : result,
+			"data":   result,
 		}
 		if bs, err := json.Marshal(data); err != nil {
 			http.Error(w, "marshal result error: "+err.Error(), http.StatusInternalServerError)
