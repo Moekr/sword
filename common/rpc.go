@@ -7,6 +7,7 @@ const (
 type Target struct {
 	Id      int64   `json:"id"`
 	Name    string  `json:"name"`
+	Note    string  `json:"note"`
 	Address string  `json:"address"`
 	Cid     []int64 `json:"cid"`
 }

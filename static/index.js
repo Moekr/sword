@@ -8,13 +8,17 @@ function formatTimestamp(timestamp) {
     return year + "-" + month + "-" + day + " " + hour + ":" + minute;
 }
 
-function paintAbbr(element, id, name, timeRange, dataSets) {
+function paintAbbr(element, id, name, note, timeRange, dataSets) {
     let chart = echarts.init(document.getElementById(element));
     let option = {
         title: {
             text: name,
             link: "/detail.html?t=" + id + "&r=" + timeRange,
             target: "self",
+            subtext: note,
+        },
+        grid: {
+            top: note === "" ? 60 : 80,
         },
         tooltip: {
             trigger: "axis",

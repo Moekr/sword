@@ -6,6 +6,9 @@
 {{template "header" .}}
 <div class="container">
     <h2>{{.target.Name}}</h2>
+{{if .target.Note}}
+    <h5>{{.target.Note}}</h5>
+{{end}}
 {{range .observers}}
     <div class="row col-md-12">
         <div id="detail-chart-{{.Id}}" style="height: 300px;"></div>

@@ -17,7 +17,7 @@
 <script>
     {{range .targets}}
     $.get("./api/data/abbr?t={{.Id}}&r={{$.timeRange}}", function (data) {
-        paintAbbr("abbr-chart-{{.Id}}", "{{.Id}}", "{{.Name}}", "{{$.timeRange}}", data)
+        paintAbbr("abbr-chart-{{.Id}}", "{{.Id}}", "{{.Name}}", "{{.Note}}","{{$.timeRange}}", data)
     });
     {{end}}
 </script>
