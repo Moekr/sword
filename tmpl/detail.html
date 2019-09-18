@@ -1,0 +1,28 @@
+{{define "detail"}}
+<!DOCTYPE html>
+<html>
+{{template "head"}}
+<body>
+{{template "header" .}}
+<div class="container">
+    <h2>{{.target.Name}}</h2>
+{{if .target.Note}}
+    <h5>{{.target.Note}}</h5>
+{{end}}
+{{range .clients}}
+    <div class="row col-md-12">
+        <div id="detail-chart-{{.ID}}" style="height: 300px;"></div>
+    </div>
+{{end}}
+</div>
+{{template "footer" .}}
+<script>
+    {{range .clients}}
+    $.get("./api/query/full?t={{$.target.ID}}&c={{.ID}}&r={{$.timeRange}}", function (data) {
+        paintFull("detail-chart-{{.ID}}", "{{.Name}}", {{$.timeRange}}, data.data)
+    });
+    {{end}}
+</script>
+</body>
+</html>
+{{end}}

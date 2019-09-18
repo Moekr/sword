@@ -1,0 +1,13 @@
+[Unit]
+Description=Sword client daemon
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/sword
+ExecStart=/opt/sword/bin/sword -l /opt/sword/logs -u http://localhost:7901 -i 1 -t token
+KillMode=process
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=multi-user.target

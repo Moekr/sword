@@ -1,0 +1,13 @@
+[Unit]
+Description=Sword bot daemon
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/sword
+ExecStart=/opt/sword/bin/bot -b bot_token -s http://localhost:7901 -t token
+KillMode=process
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=multi-user.target

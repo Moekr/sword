@@ -4,33 +4,32 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/Moekr/sword/common"
-	"github.com/Moekr/sword/util/logs"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-telegram-bot-api/telegram-bot-api"
+
+	"github.com/Moekr/sword/common/constant"
 )
 
 const (
 	badQueryMessage        = "不能识别的查询"
-	queryErrorMessage      = "查询出错"
-	serverForbiddenMessage = "服务端认证失败"
-	serverErrorMessage     = "服务端出错"
+	queryErrorMessage      = "未知错误"
+	serverForbiddenMessage = "认证失败"
+	serverErrorMessage     = "服务端错误"
 	noSuchTargetMessage    = "监测目标不存在"
 )
-
-var client = http.DefaultClient
 
 func main() {
 	api, server, token, debug := parseArgs()
 	bot, err := tgbotapi.NewBotAPI(api)
 	if err != nil {
-		logs.Fatal("create bot error: %s", err.Error())
+		panic(err)
 	}
 	bot.Debug = debug
-	logs.Info("authorized on account %s", bot.Self.UserName)
+	fmt.Printf("[Bot] authorized on account %s", bot.Self.UserName)
 	prefix := "@" + bot.Self.UserName + " "
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -69,13 +68,10 @@ func doQuery(server, token, query string) string {
 	if err != nil {
 		return badQueryMessage
 	}
-	url := fmt.Sprintf("%s/api/data/stat?t=%d&i=%s", server, id, qs[1])
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return queryErrorMessage
-	}
-	req.Header.Set(common.TokenHeaderName, token)
-	rsp, err := client.Do(req)
+	url := fmt.Sprintf("%s/api/stat?t=%d&i=%s", server, id, qs[1])
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(constant.TokenHeader, token)
+	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return queryErrorMessage
 	}
@@ -84,7 +80,7 @@ func doQuery(server, token, query string) string {
 		return serverForbiddenMessage
 	case http.StatusInternalServerError:
 		return serverErrorMessage
-	case http.StatusBadRequest:
+	case http.StatusNotFound:
 		return noSuchTargetMessage
 	case http.StatusOK:
 		if bs, err := ioutil.ReadAll(rsp.Body); err != nil {
@@ -107,22 +103,25 @@ func parseBody(body []byte) (response string) {
 	if err := json.Unmarshal(body, &obj); err != nil {
 		return queryErrorMessage
 	}
+	data := obj["data"].(map[string]interface{})
+	target, stats := data["target"].(map[string]interface{}), data["stats"].([]interface{})
 	b := strings.Builder{}
 	b.WriteString("```\n")
-	b.WriteString(obj["target"].(map[string]interface{})["name"].(string))
-	data := obj["data"].([]interface{})
-	b.WriteString("\n  Avg  /  Max  /  Min  / Lost\n")
-	for _, data := range data {
-		m := data.(map[string]interface{})
+	b.WriteString(target["name"].(string))
+	b.WriteString("\n  Avg  /  Max  /  Min  /  Std  / Lost\n")
+	for _, stat := range stats {
+		m := stat.(map[string]interface{})
 		b.WriteString(padStart(fmt.Sprint(m["avg"].(float64)), 4, ' '))
 		b.WriteString("ms /")
 		b.WriteString(padStart(fmt.Sprint(m["max"].(float64)), 4, ' '))
 		b.WriteString("ms /")
 		b.WriteString(padStart(fmt.Sprint(m["min"].(float64)), 4, ' '))
 		b.WriteString("ms /")
-		b.WriteString(padStart(fmt.Sprint(m["lost"].(float64)), 3, ' '))
+		b.WriteString(padStart(fmt.Sprint(m["std"].(float64)), 4, ' '))
+		b.WriteString("ms /")
+		b.WriteString(padStart(fmt.Sprint(m["los"].(float64)), 3, ' '))
 		b.WriteString("% from ")
-		b.WriteString(m["observer"].(map[string]interface{})["name"].(string))
+		b.WriteString(m["client"].(map[string]interface{})["name"].(string))
 		b.WriteString("\n")
 	}
 	b.WriteString("```\n")
@@ -135,7 +134,7 @@ func parseArgs() (api, server, token string, debug bool) {
 	flag.StringVar(&token, "t", "", "token used in communication with sword server")
 	flag.BoolVar(&debug, "v", false, "identify debug mode or not")
 	flag.Parse()
-	return
+	return api, server, token, debug
 }
 
 func padStart(s string, l int, r rune) string {

@@ -4,96 +4,69 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Moekr/sword/common"
-	"github.com/Moekr/sword/util/args"
-	"github.com/Moekr/sword/util/logs"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Moekr/gopkg/logs"
+	"github.com/Moekr/gopkg/periodic"
+	"github.com/Moekr/sword/client/ping"
+	"github.com/Moekr/sword/common/args"
+	"github.com/Moekr/sword/common/constant"
+	"github.com/Moekr/sword/types"
 )
 
-var _args *args.Args
-
-func Start(clientArgs *args.Args) error {
-	_args = clientArgs
-	go deferKill()
-	pingLoop()
+func Start() error {
+	periodic.NewStaticPeriodic(doJob, time.Minute, periodic.FixedRate).Start()
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	logs.Warn("[Client] received signal %v, save data and exit...", <-ch)
 	return nil
 }
 
-func deferKill() {
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGTERM)
-	logs.Warn("receive signal %v", <-ch)
-	time.Sleep(time.Second)
-	os.Exit(1)
-}
-
-func pingLoop() {
-	for {
-		now := time.Now()
-		next := time.Unix(0, (now.UnixNano()/int64(time.Minute)+1)*int64(time.Minute))
-		time.Sleep(next.Sub(now))
-		if err := ping(); err != nil {
-			logs.Debug("ping error: %s", err.Error())
-		}
-	}
-}
-
-func ping() (err error) {
-	req, err := http.NewRequest(http.MethodGet, _args.Server+"/api/conf", nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Add(common.TokenHeaderName, _args.Token)
+func doJob() {
+	req, _ := http.NewRequest(http.MethodGet, args.Args.ServerAddress+"/api/conf", nil)
+	req.Header.Add(constant.TokenHeader, args.Args.Token)
 	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
-	}
-	if rsp.StatusCode != http.StatusOK {
-		return fmt.Errorf("got response status %d when request conf", rsp.StatusCode)
+		logs.Error("[Client] fetch conf request error: %s", err.Error())
+		return
+	} else if rsp.StatusCode != http.StatusOK {
+		logs.Error("[Client] fetch conf response status: %d", rsp.StatusCode)
+		return
 	}
 	bs, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
-		return err
+		logs.Error("[Client] fetch conf read error: %s", err.Error())
+		return
 	}
-	var targets []*common.Target
-	if err := json.Unmarshal(bs, &targets); err != nil {
-		return err
+	var m struct {
+		Code int
+		Data []*types.TTarget
 	}
-	for _, target := range targets {
-		go pingTarget(target)
+	if err := json.Unmarshal(bs, &m); err != nil {
+		logs.Error("[Client] fetch conf unmarshal error: %s", err.Error())
+		return
 	}
-	return nil
+	for _, target := range m.Data {
+		go asyncWorker(target)
+	}
 }
 
-func pingTarget(target *common.Target) (err error) {
-	defer func() {
-		if err != nil {
-			logs.Debug("ping target error: %s", err.Error())
-		}
-	}()
-	record := doPing(target.Address)
-	bs, err := json.Marshal(record)
-	if err != nil {
-		return err
-	}
-	url := fmt.Sprintf("%s/api/data?t=%d&o=%d", _args.Server, target.Id, _args.ClientId)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bs))
-	if err != nil {
-		return err
-	}
-	req.Header.Add(common.TokenHeaderName, _args.Token)
+func asyncWorker(target *types.TTarget) {
+	rec := ping.Ping(target.Addr)
+	bs, _ := json.Marshal(rec)
+	u := fmt.Sprintf("%s/api/push?t=%d&c=%d", args.Args.ServerAddress, target.ID, args.Args.ClientId)
+	req, _ := http.NewRequest(http.MethodPost, u, bytes.NewReader(bs))
+	req.Header.Add(constant.TokenHeader, args.Args.Token)
 	req.Header.Add("Content-Type", "application/json")
 	rsp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		logs.Error("[Client] upload data error: %s", err.Error())
+	} else if rsp.StatusCode != http.StatusOK {
+		logs.Error("[Client] upload data status: %d", rsp.StatusCode)
 	}
-	if rsp.StatusCode != http.StatusOK {
-		return fmt.Errorf("got response status %d when post data", rsp.StatusCode)
-	}
-	return nil
 }

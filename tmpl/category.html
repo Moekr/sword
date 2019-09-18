@@ -1,0 +1,10 @@
+{{define "category"}}
+<li class="dropdown{{if not .first}}-submenu{{end}}">
+{{if .first}}<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{.category.Name}} <span class="caret"></span></a>{{else}}<a href="./index.html?c={{.category.ID}}&r={{.timeRange}}">{{.category.Name}}</a>{{end}}
+    <ul class="dropdown-menu">
+    {{range .category.Sub}}
+    {{if .Sub}}{{template "category" dict "category" . "timeRange" $.timeRange "first" false}}{{else}}<li><a href="./index.html?c={{.ID}}&r={{$.timeRange}}">{{.Name}}</a></li>{{end}}
+    {{end}}
+    </ul>
+</li>
+{{end}}

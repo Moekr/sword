@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-favicon=$(cat static/favicon.ico | base64)
+rm -rf output
 
-go build -ldflags "-X 'github.com/Moekr/sword/server.HeadTemplate=$(cat template/head.html)' \
--X 'github.com/Moekr/sword/server.CategoryTemplate=$(cat template/category.html)' \
--X 'github.com/Moekr/sword/server.HeaderTemplate=$(cat template/header.html)' \
--X 'github.com/Moekr/sword/server.FooterTemplate=$(cat template/footer.html)' \
--X 'github.com/Moekr/sword/server.IndexTemplate=$(cat template/index.html)' \
--X 'github.com/Moekr/sword/server.DetailTemplate=$(cat template/detail.html)' \
--X 'github.com/Moekr/sword/server.IndexCSS=$(cat static/index.css)' \
--X 'github.com/Moekr/sword/server.IndexJS=$(cat static/index.js)' \
--X 'github.com/Moekr/sword/server.FaviconEncoded=$favicon'" \
-    -a -v -o output/sword
+VERSION=$(git rev-parse --short HEAD || echo "UnknownRev")-$(date '+%Y%m%d%H%M')
+
+go build -a -v -ldflags "-X 'github.com/Moekr/sword/common/version.Version=${VERSION}'" -o output/bin/sword
+go build -a -v -o output/bin/bot ./bot
+
+cp -R ./assets ./etc ./run ./script ./tmpl ./output
+
+mkdir ./output/data ./output/logs

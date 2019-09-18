@@ -3,16 +3,130 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "zCKmdFVOGV/SdwjpHBzeaeyPcP0=",
+			"path": "github.com/Moekr/gopkg/algo",
+			"revision": "f18ca55c416d9967cdd6d13404f4259a0245c434",
+			"revisionTime": "2019-05-01T16:52:30Z"
+		},
+		{
+			"checksumSHA1": "0ep+YgFetfo27kGFXYY1lnig7Tg=",
+			"path": "github.com/Moekr/gopkg/compress",
+			"revision": "f18ca55c416d9967cdd6d13404f4259a0245c434",
+			"revisionTime": "2019-05-01T16:52:30Z"
+		},
+		{
+			"checksumSHA1": "Z3SjzIgOuIIHfNs51tkolcS+r7o=",
+			"path": "github.com/Moekr/gopkg/fs",
+			"revision": "f18ca55c416d9967cdd6d13404f4259a0245c434",
+			"revisionTime": "2019-05-01T16:52:30Z"
+		},
+		{
+			"checksumSHA1": "cqdqK1cb5yr8eCbs/WesA016vJ8=",
+			"path": "github.com/Moekr/gopkg/logs",
+			"revision": "f18ca55c416d9967cdd6d13404f4259a0245c434",
+			"revisionTime": "2019-05-01T16:52:30Z"
+		},
+		{
+			"checksumSHA1": "OpTv/PSB7W3di7TOJucFdCByVLQ=",
+			"path": "github.com/Moekr/gopkg/must",
+			"revision": "f18ca55c416d9967cdd6d13404f4259a0245c434",
+			"revisionTime": "2019-05-01T16:52:30Z"
+		},
+		{
+			"checksumSHA1": "62PvtRRlBjR9Q3SbmvzR2BJB65I=",
+			"path": "github.com/Moekr/gopkg/periodic",
+			"revision": "f18ca55c416d9967cdd6d13404f4259a0245c434",
+			"revisionTime": "2019-05-01T16:52:30Z"
+		},
+		{
+			"checksumSHA1": "oqAgODlv2smDWzHhNt3KAmA1NGQ=",
+			"path": "github.com/Unknwon/com",
+			"revision": "2d12a219ccaf4befccef496869ebf1c957d50709",
+			"revisionTime": "2019-02-14T22:18:49Z"
+		},
+		{
+			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
+			"checksumSHA1": "y0olVbiMQ6/UOa/eh52XYnies90=",
+			"path": "github.com/go-macaron/inject",
+			"revision": "d8a0b8677191f4380287cfebd08e462217bac7ad",
+			"revisionTime": "2016-06-27T17:00:12Z"
+		},
+		{
 			"checksumSHA1": "TQoVLB6O0fejiQX0GDaZXkWpK4w=",
 			"path": "github.com/go-telegram-bot-api/telegram-bot-api",
 			"revision": "9860bdfd3a171ceafb6e1eafa163482a6ef92643",
 			"revisionTime": "2018-10-08T19:45:45Z"
 		},
 		{
+			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
+			"checksumSHA1": "klOkBN4toxl5Exq3fjz876s8/wE=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4",
+			"revisionTime": "2019-03-11T16:20:41Z"
+		},
+		{
+			"checksumSHA1": "c6pbpF7eowwO59phRTpF8cQ80Z0=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "f35b8ab0b5a2cef36673838d662e249dd9c94686",
+			"revisionTime": "2018-05-06T18:05:49Z"
+		},
+		{
 			"checksumSHA1": "t8jzPFIv4DNACv+cuZoigNmjPLQ=",
 			"path": "github.com/technoweenie/multipartstreamer",
 			"revision": "a90a01d73ae432e2611d178c18367fbaa13e0154",
 			"revisionTime": "2013-10-20T00:18:33Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "a1f597ede03a7bef967a422b5b3a5bd08805a01e",
+			"revisionTime": "2019-02-05T21:23:42Z"
+		},
+		{
+			"checksumSHA1": "QU00lGkD/G00hoTs2qG7q4xsLVc=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "a1f597ede03a7bef967a422b5b3a5bd08805a01e",
+			"revisionTime": "2019-02-05T21:23:42Z"
+		},
+		{
+			"checksumSHA1": "5rBiPRCALD1lczQlx5Oz4V1VYhc=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "a2f829d7f35f2ed1c3520c553a6226495455cae0",
+			"revisionTime": "2019-03-13T09:55:42Z"
+		},
+		{
+			"checksumSHA1": "xRGRFxlD0Q6X8KdR4/KIwNyDJG0=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "a2f829d7f35f2ed1c3520c553a6226495455cae0",
+			"revisionTime": "2019-03-13T09:55:42Z"
+		},
+		{
+			"checksumSHA1": "s4yxtZss88Rf9psrJz9S1EAy6vI=",
+			"path": "gopkg.in/ini.v1",
+			"revision": "c85607071cf08ca1adaf48319cd1aa322e81d8c1",
+			"revisionTime": "2019-02-17T19:36:56Z"
+		},
+		{
+			"checksumSHA1": "+PRNmovbaIeAtxPWIZrfRddRjwc=",
+			"path": "gopkg.in/macaron.v1",
+			"revision": "dfcb80ca86e8534962c62812efd93209c7e600e7",
+			"revisionTime": "2018-12-17T00:30:54Z"
+		},
+		{
+			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
+			"revisionTime": "2018-03-28T19:50:20Z"
 		}
 	],
 	"rootPath": "github.com/Moekr/sword"
